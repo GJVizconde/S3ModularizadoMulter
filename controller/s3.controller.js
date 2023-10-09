@@ -1,6 +1,20 @@
-import { uploadFileS3 } from '../s3.js';
+import { uploadFileS3, uploadMultipleFilesS3 } from '../utils/s3utils.js';
 
 export const uploadFile = async (req, res) => {
-  await uploadFileS3(req.file);
-  res.status(200).json('Success');
+  const result = await uploadFileS3(req.file);
+  res.status(200).json({
+    status: 'Success',
+    url: result,
+  });
+};
+
+export const uploadFiles = async (req, res) => {
+  const { files } = req;
+  const { folder, userId } = req.params;
+  const urlFiles = await uploadMultipleFilesS3(files, folder, userId);
+
+  res.status(200).json({
+    status: 'Success',
+    urlFiles: urlFiles,
+  });
 };
