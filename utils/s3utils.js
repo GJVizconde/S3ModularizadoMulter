@@ -5,19 +5,25 @@ import { s3Client } from '../config/s3Client.config.js';
 
 export async function uploadFileS3(file) {
   const stream = fs.createReadStream(file.path);
-  const uploadParams = {
-    Bucket: AWS_BUCKET_NAME,
-    Key: `uploadsss/${file.originalname}`,
-    Body: stream,
-  };
 
-  const command = new PutObjectCommand(uploadParams);
-  await s3Client.send(command);
+  try {
+    const uploadParams = {
+      Bucket: AWS_BUCKET_NAME,
+      Key: `uploadsss/${file.originalname}`,
+      Body: stream,
+    };
 
-  return `https://${AWS_BUCKET_NAME}.s3.amazonaws.com/${uploadParams.Key}`;
+    const command = new PutObjectCommand(uploadParams);
+    await s3Client.send(command);
+
+    return `https://${AWS_BUCKET_NAME}.s3.amazonaws.com/${uploadParams.Key}`;
+  } catch (error) {
+    throw new Error(error);
+  }
 }
 
 export async function uploadMultipleFilesS3(files, folder, userId) {
+  console.log(files);
   const uploadParams = files.map((file) => {
     return {
       Bucket: AWS_BUCKET_NAME,
@@ -26,14 +32,18 @@ export async function uploadMultipleFilesS3(files, folder, userId) {
     };
   });
 
-  const result = await Promise.all(
-    uploadParams.map((param) => s3Client.send(new PutObjectCommand(param)))
-  );
-
-  if (result[0].$metadata.httpStatusCode === 200) {
-    const urlFiles = uploadParams.map(
-      (param) => `https://${AWS_BUCKET_NAME}.s3.amazonaws.com/${param.Key}`
+  try {
+    const result = await Promise.all(
+      uploadParams.map((param) => s3Client.send(new PutObjectCommand(param)))
     );
-    return urlFiles;
+
+    if (result[0].$metadata.httpStatusCode === 200) {
+      const urlFiles = uploadParams.map(
+        (param) => `https://${AWS_BUCKET_NAME}.s3.amazonaws.com/${param.Key}`
+      );
+      return urlFiles;
+    }
+  } catch (error) {
+    throw new Error(error);
   }
 }
