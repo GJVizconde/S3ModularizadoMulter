@@ -23,7 +23,6 @@ export async function uploadFileS3(file) {
 }
 
 export async function uploadMultipleFilesS3(files, folder, userId) {
-  console.log(files);
   const uploadParams = files.map((file) => {
     return {
       Bucket: AWS_BUCKET_NAME,
